@@ -225,7 +225,7 @@ kernel void nms<DTYPE ## 4, DTYPE>(                        \
   uint2    tgid   [[threadgroup_position_in_grid]],        \
   uint2    tid2   [[thread_position_in_threadgroup]]);
 
-template <typename T>
+template<typename T>
 kernel void roi_align(
     constant T       * input          [[buffer(0)]],
     constant T       * rois           [[buffer(1)]],
@@ -246,40 +246,40 @@ kernel void roi_align(
   int64_t c = (index / pooled_width / pooled_height) % channels;
   int64_t n = index / (pooled_width * pooled_height * channels);
 
-  constant T* offset_rois = rois + n * 5;
+    constant T* offset_rois = rois + n * 5;
   int64_t roi_batch_ind = static_cast<int64_t>(offset_rois[0]);
 
-  // Do not using rounding; this implementation detail is critical
+    // Do not using rounding; this implementation detail is critical
   T offset = aligned ? static_cast<T>(0.5) : static_cast<T>(0.0);
-  T roi_start_w = offset_rois[1] * spatial_scale - offset;
-  T roi_start_h = offset_rois[2] * spatial_scale - offset;
-  T roi_end_w   = offset_rois[3] * spatial_scale - offset;
-  T roi_end_h   = offset_rois[4] * spatial_scale - offset;
+    T roi_start_w = offset_rois[1] * spatial_scale - offset;
+    T roi_start_h = offset_rois[2] * spatial_scale - offset;
+    T roi_end_w = offset_rois[3] * spatial_scale - offset;
+    T roi_end_h = offset_rois[4] * spatial_scale - offset;
 
-  T roi_width = roi_end_w - roi_start_w;
-  T roi_height = roi_end_h - roi_start_h;
+    T roi_width = roi_end_w - roi_start_w;
+    T roi_height = roi_end_h - roi_start_h;
 
-  if (!aligned) {
-    // Force malformed ROIs to be 1x1
+    if (!aligned) {
+      // Force malformed ROIs to be 1x1
     roi_width = max(roi_width, static_cast<T>(1.0));
     roi_height = max(roi_height, static_cast<T>(1.0));
-  }
+    }
 
   T bin_size_h = roi_height / static_cast<T>(pooled_height);
   T bin_size_w = roi_width / static_cast<T>(pooled_width);
 
   constant T* offset_input = input + (roi_batch_ind * channels + c) * height * width;
 
-  // We use roi_bin_grid to sample the grid and mimic integral
+    // We use roi_bin_grid to sample the grid and mimic integral
   int64_t roi_bin_grid_h = sampling_ratio > 0
     ? sampling_ratio
     : static_cast<int64_t>(ceil(roi_height / static_cast<T>(pooled_height)));
   int64_t roi_bin_grid_w = sampling_ratio > 0
-    ? sampling_ratio
+        ? sampling_ratio
     : static_cast<int64_t>(ceil(roi_width / static_cast<T>(pooled_width)));
 
-  // We do average (integral) pooling inside a bin
-  // When the grid is empty, output zeros.
+    // We do average (integral) pooling inside a bin
+    // When the grid is empty, output zeros.
   const T count = max(roi_bin_grid_h * roi_bin_grid_w, static_cast<int64_t>(1));
   T output_val = static_cast<T>(0.0);
 
@@ -290,30 +290,30 @@ kernel void roi_align(
       T x = roi_start_w + static_cast<T>(pw) * bin_size_w +
             (static_cast<T>(ix) + static_cast<T>(0.5)) * bin_size_w / static_cast<T>(roi_bin_grid_w);
 
-      T val = bilinear_interpolate(offset_input, height, width, y, x, index);
-      output_val += val;
+        T val = bilinear_interpolate(offset_input, height, width, y, x, index);
+        output_val += val;
+      }
     }
+
+    output_val /= count;
+    output[index] = output_val;
   }
 
-  output_val /= count;
-  output[index] = output_val;
-}
-
 #define REGISTER_ROI_ALIGN_OP(DTYPE)       \
-template                                              \
-[[host_name("roi_align_" #DTYPE)]]                    \
+template                                                \
+[[host_name("roi_align_" #DTYPE)]]                      \
 kernel void roi_align<DTYPE>(              \
-    constant DTYPE   * input          [[buffer(0)]],  \
-    constant DTYPE   * rois           [[buffer(1)]],  \
-    device   DTYPE   * output         [[buffer(2)]],  \
+  constant DTYPE * input            [[buffer(0)]],      \
+  constant DTYPE * rois             [[buffer(1)]],      \
+  device   DTYPE * output           [[buffer(2)]],      \
     constant float   & spatial_scale  [[buffer(3)]],  \
-    constant int64_t & channels       [[buffer(4)]],  \
-    constant int64_t & height         [[buffer(5)]],  \
-    constant int64_t & width          [[buffer(6)]],  \
-    constant int64_t & pooled_height  [[buffer(7)]],  \
-    constant int64_t & pooled_width   [[buffer(8)]],  \
-    constant int64_t & sampling_ratio [[buffer(9)]],  \
-    constant bool    & aligned        [[buffer(10)]], \
+  constant int64_t & channels       [[buffer(4)]],      \
+  constant int64_t & height         [[buffer(5)]],      \
+  constant int64_t & width          [[buffer(6)]],      \
+  constant int64_t & pooled_height  [[buffer(7)]],      \
+  constant int64_t & pooled_width   [[buffer(8)]],      \
+  constant int64_t & sampling_ratio [[buffer(9)]],      \
+  constant bool    & aligned        [[buffer(10)]],     \
     uint     index   [[thread_position_in_grid]]);
 
 template<typename T, typename integer_t>
@@ -996,7 +996,7 @@ kernel void ps_roi_pool_backward<DTYPE, INT_DTYPE>(          \
     constant int64_t & width           [[buffer(7)]],        \
     constant int64_t & pooled_height   [[buffer(8)]],        \
     constant int64_t & pooled_width    [[buffer(9)]],        \
-    constant int64_t & channels_out    [[buffer(10)]],       \
+    constant int64_t & channels_out    [[buffer(10)]],       \ 
     constant float   & spatial_scale   [[buffer(11)]],       \
     uint2     tgid   [[threadgroup_position_in_grid]],       \
     uint2     tptg   [[threads_per_threadgroup]],            \
